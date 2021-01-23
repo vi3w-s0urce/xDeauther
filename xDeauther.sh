@@ -21,6 +21,7 @@ BOLD='\e[1m'
 RST='\e[0m'
 
 trap quit EXIT
+mkdir log
 
 function interface() {
   echo -e "[${G}${BOLD}*${RST}] Please select your interface:\n"
@@ -66,7 +67,7 @@ function change_mode() {
 
 function quit() {
   echo -e "\n\nBye"
-  rm log/*
+  rm -rf log
 }
 
 interface
