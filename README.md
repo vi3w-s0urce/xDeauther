@@ -1,5 +1,5 @@
 # xDeauther
-Easy tools for deauthentication attack wifi
+Easy tools for deauthentication attack WPA/WPA2
 
 ***THIS PROJECT IN PROGRESS***
 
