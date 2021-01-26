@@ -23,8 +23,24 @@ RST='\033[0m'
 trap quit EXIT
 mkdir log
 
+function banner() {
+  echo -e """
+${R}▒██   ██▒▓█████▄ ▓█████ ▄▄▄       █    ██ ▄▄▄█████▓ ██░ ██ ▓█████  ██▀███
+▒▒ █ █ ▒░▒██▀ ██▌▓█   ▀▒████▄     ██  ▓██▒▓  ██▒ ▓▒▓██░ ██▒▓█   ▀ ▓██ ▒ ██▒
+░░  █   ░░██   █▌▒███  ▒██  ▀█▄  ▓██  ▒██░▒ ▓██░ ▒░▒██▀▀██░▒███   ▓██ ░▄█ ▒
+ ░ █ █ ▒ ░▓█▄   ▌▒▓█  ▄░██▄▄▄▄██ ▓▓█  ░██░░ ▓██▓ ░ ░▓█ ░██ ▒▓█  ▄ ▒██▀▀█▄
+▒██▒ ▒██▒░▒████▓ ░▒████▒▓█   ▓██▒▒▒█████▓   ▒██▒ ░ ░▓█▒░██▓░▒████▒░██▓ ▒██▒
+▒▒ ░ ░▓ ░ ▒▒▓  ▒ ░░ ▒░ ░▒▒   ▓▒█░░▒▓▒ ▒ ▒   ▒ ░░    ▒ ░░▒░▒░░ ▒░ ░░ ▒▓ ░▒▓░
+░░   ░▒ ░ ░ ▒  ▒  ░ ░  ░ ▒   ▒▒ ░░░▒░ ░ ░     ░     ▒ ░▒░ ░ ░ ░  ░  ░▒ ░ ▒░
+ ░    ░   ░ ░  ░    ░    ░   ▒    ░░░ ░ ░   ░       ░  ░░ ░   ░     ░░   ░
+ ░    ░     ░       ░  ░     ░  ░   ░               ░  ░  ░   ░  ░   ░
+          ░${RST}                   ${bgG}${H}~=:by G4L1L30:=~${RST}
+                  ${C}${BOLD}\033[4mhttps://github.com/xG4L1L30x/xDeauther${RST}
+"""
+}
+
 function interface() {
-  echo -e "${B}${BOLD}Please select interface:${RST}\n"
+  echo -e "-=[ ${Y}${BOLD}SELECT INTERFACE${RST} ]=-\n"
   ip link | grep -E "^[0-9]+" | awk -F':' '{ print $2 }' 1> log/iface.txt
   cat log/iface.txt | awk '{ print $1 }' | awk '{print "[" "\033[32m\033[1m"NR "\033[0m] " $s}'
   echo ""
@@ -42,27 +58,33 @@ function interface() {
 function check_mode() {
   mode=$(iw $iface info | grep "type" )
   if [[ $mode == *'monitor'* ]]; then
-    echo -e "[${G}${BOLD}*${RST}] Interface already in monitor mode"
+    echo -e "\n[${G}${BOLD}*${RST}] Interface already in monitor mode"
+    sleep 2
+    clear
+    banner
     target
   else
-    echo -e "[${R}${BOLD}!${RST}] Interface is'nt on monitor mode!"
-    sleep 1
-    echo -e "[${G}${BOLD}*${RST}] Change interface mode to monitor... \n"
-    sleep 3
+    echo -e "\n[${R}${BOLD}!${RST}] Interface isnt on monitor mode!"
+    sleep 2
+    loading
     change_mode
-    interface
   fi
 }
 
 function change_mode() {
   airmon-ng start $iface > /dev/null 2>&1
-  sleep 5
   chck=$(iw $iface info | grep "type" )
   if [[ $chck == *'monitor'* ]]; then
     echo -e "[*] Success change to monitor mode"
+    clear
+    banner
     target
   elif [[ $chck == *'managed'* ]]; then
-    echo -e "[${R}${BOLD}!${RST}] Interface doesnt supported!"
+    echo -e "\n\n[${R}${BOLD}!${RST}] Interface doesnt supported!"
+    sleep 2
+    clear
+    banner
+    interface
   fi
   chckmon=$(ip link | grep -E "^[0-9]+" | awk -F':' '{ print $1 $2 }' | grep "mon")
   if [[ $chckmon == *'mon'* ]]; then
@@ -71,12 +93,50 @@ function change_mode() {
 }
 
 function target() {
+  echo -e "-=[ ${Y}${BOLD}EXPLORING TARGET${RST} ]=-\n"
+  loading2&
+  echo -e "[${G}${BOLD}*${RST}] Press CTRL+C to stop"
   xterm -e /bin/bash -l -c "airodump-ng -w log/target --output-format csv ${iface}"
-  cat log/target-01.csv | sed '1d' | cut -d, -f 14,4,1,6 | awk -F',' '{print $4"," $1"," $2"," $3}' > log/showtarget.csv
+  clear
+  banner
+  echo -e "-=[ ${Y}${BOLD}SELECT TARGET${RST} ]=-\n"
+  rmline=$(grep -n "Station MAC" log/target-01.csv | awk -F':' '{ print $1 }')
+  rmline=$(($rmline - 1))
+  sed "${rmline}~1d" log/target-01.csv > log/target.csv
+  sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4"," $1"," $2"," $3 }' > log/showtarget.csv
+  sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $1 }' > log/BSSID.txt
+  sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $2 }' > log/channel.txt
   column -s, -t < log/showtarget.csv > log/target.txt
-  cat log/target.txt | awk '{ print "["NR-1"]" $s }' | sed '1s/0/#/'> log/showtarget.txt
+  awk '{ print "[""\033[32m\033[1m"NR-1"\033[0m]" $s }' log/target.txt | sed '1s/0/#/'> log/showtarget.txt
   cat log/showtarget.txt
-  read
+  echo -ne "\n${bgR}${H}xDeauther${RST}:${C}${BOLD}Target${RST} => "; read slcttarget
+  slcttarget=$(($slcttarget + 1))
+}
+
+function loading2() {
+  for (( i = 0; i <= 12 ; i++ )); do
+    echo -ne "[${Y}―${RST}] Exploring for target...\r"
+    sleep 0.1
+    echo -ne "[\]\r"
+    sleep 0.1
+    echo -ne "[${Y}￨${RST}]\r"
+    sleep 0.1
+    echo -ne "[${Y}/${RST}]\r"
+    sleep 0.1
+  done
+}
+
+function loading() {
+  for (( i = 0; i <= 20 ; i++ )); do
+    echo -ne "[${Y}―${RST}] Change interface mode to monitor...\r"
+    sleep 0.1
+    echo -ne "[\]\r"
+    sleep 0.1
+    echo -ne "[${Y}￨${RST}]\r"
+    sleep 0.1
+    echo -ne "[${Y}/${RST}]\r"
+    sleep 0.1
+  done
 }
 
 function quit() {
@@ -85,4 +145,6 @@ function quit() {
   rm -rf log
 }
 
+clear
+banner
 interface
