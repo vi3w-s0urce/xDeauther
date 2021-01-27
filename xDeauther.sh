@@ -34,8 +34,8 @@ ${R}▒██   ██▒▓█████▄ ▓█████ ▄▄▄     
 ░░   ░▒ ░ ░ ▒  ▒  ░ ░  ░ ▒   ▒▒ ░░░▒░ ░ ░     ░     ▒ ░▒░ ░ ░ ░  ░  ░▒ ░ ▒░
  ░    ░   ░ ░  ░    ░    ░   ▒    ░░░ ░ ░   ░       ░  ░░ ░   ░     ░░   ░
  ░    ░     ░       ░  ░     ░  ░   ░               ░  ░  ░   ░  ░   ░
-          ░${RST}                   ${bgG}${H}~=:by G4L1L30:=~${RST}
-                  ${C}${BOLD}\033[4mhttps://github.com/xG4L1L30x/xDeauther${RST}
+          ░${RST}                   ${G}${BOLD}~=:by G4L1L30:=~${RST}
+                > ${C}\033[4mhttps://github.com/xG4L1L30x/xDeauther${RST} <
 """
 }
 
@@ -95,7 +95,7 @@ function change_mode() {
 function target() {
   echo -e "-=[ ${Y}${BOLD}EXPLORING TARGET${RST} ]=-\n"
   loading2&
-  echo -e "[${G}${BOLD}*${RST}] Press CTRL+C to stop"
+  echo -e "[${G}${BOLD}*${RST}]Wait at least 5 second and then press CTRL+C to stop"
   xterm -e /bin/bash -l -c "airodump-ng -w log/target --output-format csv ${iface}"
   clear
   banner
