@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #warna
 H='\033[30m'
