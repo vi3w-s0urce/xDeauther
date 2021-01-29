@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#Coding by G4L1L30
+#xDeauther v1.0
+#Coded by G4L1L30
 
 #warna
 H='\033[30m'
@@ -22,8 +23,13 @@ bgW='\033[107m'
 BOLD='\033[1m'
 RST='\033[0m'
 
-trap quit EXIT
-mkdir log
+trap quit INT
+
+if [[ "$(id -u)" -ne 0 ]]; then
+		banner
+		echo -e "[${R}${BOLD}!${RST}] This script must run as root!"
+		exit
+fi
 
 function banner() {
   echo -e """
@@ -41,14 +47,20 @@ ${R}▒██   ██▒▓█████▄ ▓█████ ▄▄▄     
 """
 }
 
+function dependencies() {
+  command -v aircrack-ng > /dev/null 2>&1 || { echo -e "[${R}${BOLD}!${RST}] Dependencies not installed! Please run install.sh first"; exit; }
+  command -v mdk4 > /dev/null 2>&1 || { echo -e "[${R}${BOLD}!${RST}] Dependencies not installed! Please run install.sh first"; exit; }
+  command -v xterm > /dev/null 2>&1 || { echo -e "[${R}${BOLD}!${RST}] Dependencies not installed! Please run install.sh first"; exit; }
+}
+
 function interface() {
   echo -e "-=[ ${Y}${BOLD}SELECT INTERFACE${RST} ]=-\n"
-  ip link | grep -E "^[0-9]+" | awk -F':' '{ print $2 }' 1> log/iface.txt
-  cat log/iface.txt | awk '{ print $1 }' | awk '{print "[" "\033[32m\033[1m"NR "\033[0m] " $s}'
+  ip link | grep -E "^[0-9]+" | awk -F':' '{ print $2 }' 1> tmp/iface.txt
+  cat tmp/iface.txt | awk '{ print $1 }' | awk '{print "[" "\033[32m\033[1m"NR "\033[0m] " $s}'
   echo ""
   echo -ne "${bgR}${H}xDeauther${RST}:${C}${BOLD}Interface${RST} => "; read slct_interface
   echo ""
-  iface=$(sed "$slct_interface!d" log/iface.txt | awk '{ print $1 }')
+  iface=$(sed "$slct_interface!d" tmp/iface.txt | awk '{ print $1 }')
   if [[ $iface == "" ]] && [[ $slct_interface == 0 ]] || [[ $slct_interface =~ [a-zA-Z]+ ]]; then
     echo -e "[${R}${BOLD}!${RST}] Invalid Option! Please select number\n"
     interface
@@ -125,22 +137,22 @@ function target() {
   echo -e "-=[ ${Y}${BOLD}EXPLORING TARGET${RST} ]=-\n"
   loading3&
   echo -e "[${Y}${BOLD}*${RST}] Wait at least 5 second and then press CTRL+C to stop"
-  xterm -e /bin/bash -l -c "airodump-ng -w log/target --output-format csv ${iface}"
+  xterm -e /bin/bash -l -c "airodump-ng -w tmp/target --output-format csv ${iface}"
   clear
   banner
   echo -e "-=[ ${Y}${BOLD}SELECT TARGET${RST} ]=-\n"
-  rmline=$(grep -n "Station MAC" log/target-01.csv | awk -F':' '{ print $1 }')
+  rmline=$(grep -n "Station MAC" tmp/target-01.csv | awk -F':' '{ print $1 }')
   rmline=$(($rmline - 1))
-  sed "${rmline}~1d" log/target-01.csv > log/target.csv
-  sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4"," $1"," $2"," $3 }' > log/showtarget.csv
-  column -s, -t < log/showtarget.csv > log/target.txt
-  awk '{ print "[""\033[32m\033[1m"NR-1"\033[0m]" $s }' log/target.txt | sed '1s/0/#/'> log/showtarget.txt
-  cat log/showtarget.txt
+  sed "${rmline}~1d" tmp/target-01.csv > tmp/target.csv
+  sed '1d' tmp/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4"," $1"," $2"," $3 }' > tmp/showtarget.csv
+  column -s, -t < tmp/showtarget.csv > tmp/target.txt
+  awk '{ print "[""\033[32m\033[1m"NR-1"\033[0m]" $s }' tmp/target.txt | sed '1s/0/#/'> tmp/showtarget.txt
+  cat tmp/showtarget.txt
   echo -ne "\n${bgR}${H}xDeauther${RST}:${C}${BOLD}Target${RST} => "; read slct_target
   slct_target=$(($slct_target + 1))
-  ESSID=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4 }' | sed "${slct_target}!d")
-  BSSID=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $1 }' | sed "${slct_target}!d")
-  channel=$(sed '1d' log/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $2 }' | sed "${slct_target}!d")
+  ESSID=$(sed '1d' tmp/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $4 }' | sed "${slct_target}!d")
+  BSSID=$(sed '1d' tmp/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $1 }' | sed "${slct_target}!d")
+  channel=$(sed '1d' tmp/target.csv | cut -d, -f 14,4,1,6 | awk -F',' '{ print $2 }' | sed "${slct_target}!d")
   echo -e "\n[${G}${BOLD}+${RST}] Set${R}${BOLD}${ESSID}${RST} to victim"
   sleep 2
   clear
@@ -185,7 +197,7 @@ function launch_attack() {
     weapons
   fi
   if [[ $close == y ]] || [[ $close == Y ]]; then
-    exit
+    quit
   elif [[ $close == n  ]] || [[ $close == N ]]; then
     clear
     banner
@@ -233,11 +245,19 @@ function loading() {
 }
 
 function quit() {
-  echo -e "\n\nBye"
-  airmon-ng stop $iface > /dev/null 2>&1
-  rm -rf log
+  echo -e "\n\n[${R}${BOLD}-${RST}] Cleaning temporary file..."
+  rm tmp/*
+  if [[ $( iw $iface info | grep "type" ) == *'monitor'* ]]; then
+    sleep 2
+    echo -e "[${R}${BOLD}-${RST}] Set interface to managed mode..."
+    airmon-ng stop $iface > /dev/null 2>&1
+  fi
+  sleep 2
+  echo -e "[${Y}${BOLD}*${RST}] Thx for using my script :)"
+  exit
 }
 
 clear
 banner
+dependencies
 interface
