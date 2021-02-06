@@ -8,7 +8,7 @@ xDeauther is a Hacking tool for deauthentication attack wifi with mdk4 or airepl
 
 
 ## Dependecies
-- aireplay-ng
+- aircrack-ng
 - mdk4
 - xterm
 
