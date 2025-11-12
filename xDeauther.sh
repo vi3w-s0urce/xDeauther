@@ -42,8 +42,8 @@ ${R}▒██   ██▒▓█████▄ ▓█████ ▄▄▄     
 ░░   ░▒ ░ ░ ▒  ▒  ░ ░  ░ ▒   ▒▒ ░░░▒░ ░ ░     ░     ▒ ░▒░ ░ ░ ░  ░  ░▒ ░ ▒░
  ░    ░   ░ ░  ░    ░    ░   ▒    ░░░ ░ ░   ░       ░  ░░ ░   ░     ░░   ░
  ░    ░     ░       ░  ░     ░  ░   ░               ░  ░  ░   ░  ░   ░
-          ░${RST}                   ${G}${BOLD}~=:by G4L1L30:=~${RST}
-                > ${C}\033[4mhttps://github.com/xG4L1L30x/xDeauther${RST} <
+          ░${RST}                   ${G}${BOLD}~=:by vi3ws0urce:=~${RST}
+                > ${C}\033[4mhttps://github.com/vi3w-s0urce/xDeauther${RST} <
 """
 }
 
