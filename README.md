@@ -19,7 +19,7 @@ Wireless card support monitor mode and run as root.
 
 ## How to use
 ```
-git clone https://github.com/xG4L1L30x/xDeauther
+git clone https://github.com/vi3w-s0urce/xDeauther
 cd xDeauther
 ./install.sh
 ./xDeauther.sh
